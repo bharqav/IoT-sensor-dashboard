@@ -66,9 +66,8 @@ def run():
             print(f"\n[#{count}] pushed:")
             print(f"  temp: {data['temperature']}°C")
             print(f"  hum:  {data['humidity']}%")
-            
-            # sleep a bit so we don't spam
-            time.sleep(2)
+
+            time.sleep(2) #change this value and the script sends value in those intervals
             
     except KeyboardInterrupt:
         print("\nstopping...")
