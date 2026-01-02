@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend/database.db:/app/database.db
+    environment:
+      - NODE_ENV=production
+      - MQTT_BROKER=broker.emqx.io
+      - MQTT_TOPIC=intern-test/candidate-001/sensor-data
+    restart: unless-stopped
+    networks:
+      - iot-network
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5000
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - iot-network
+
+networks:
+  iot-network:
+    driver: bridge
+
+volumes:
+  db-data:
