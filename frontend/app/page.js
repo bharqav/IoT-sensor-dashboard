@@ -125,35 +125,36 @@ export default function Dashboard() {
                     </div>
                 )}
 
-                {/* --- Alert Component --- */}
+                {/* --- Alert Component (Toast) --- */}
                 {showAlert && latestReading && (
-                    <div className="bg-gradient-to-r from-red-500 to-orange-500 border-2 border-red-600 rounded-lg p-6 mb-6 shadow-lg animate-pulse">
-                        <div className="flex items-start justify-between">
-                            <div className="flex items-center">
-                                <svg className="w-8 h-8 text-white mr-3 animate-bounce" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                </svg>
-                                <div>
-                                    <h3 className="text-xl font-bold text-white mb-1">
-                                        ⚠️ HIGH TEMPERATURE ALERT!
-                                    </h3>
-                                    <p className="text-white text-sm">
-                                        Current temperature: <span className="font-bold text-2xl">{latestReading.temperature}°C</span> exceeds threshold of 30°C
+                    <div className="fixed bottom-4 right-4 z-50 max-w-sm w-full bg-gradient-to-r from-red-500 to-orange-500 border-l-4 border-red-700 rounded-r-lg shadow-2xl animate-pulse transform transition-all duration-300 ease-in-out">
+                        <div className="p-4">
+                            <div className="flex items-start">
+                                <div className="flex-shrink-0">
+                                    <svg className="w-6 h-6 text-white animate-bounce" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div className="ml-3 w-0 flex-1 pt-0.5">
+                                    <p className="text-sm font-bold text-white uppercase">
+                                        High Temp Alert!
                                     </p>
-                                    <p className="text-white text-xs mt-1 opacity-90">
-                                        Action required immediately.
+                                    <p className="mt-1 text-sm text-white opacity-90">
+                                        Current: <span className="font-bold">{latestReading.temperature}°C</span> (&gt;30°C)
                                     </p>
                                 </div>
+                                <div className="ml-4 flex-shrink-0 flex">
+                                    <button
+                                        onClick={() => setShowAlert(false)}
+                                        className="bg-transparent rounded-md inline-flex text-white hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                    >
+                                        <span className="sr-only">Close</span>
+                                        <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
-                            <button
-                                onClick={() => setShowAlert(false)}
-                                className="text-white hover:text-gray-200 transition-colors"
-                                aria-label="Dismiss alert"
-                            >
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
                         </div>
                     </div>
                 )}
