@@ -1,67 +1,56 @@
-/**
- * Real-Time IoT Backend Server
- * Subscribes to MQTT broker, stores data in SQLite, and exposes REST API
- */
+// Simple Backend for IoT Dashboard
+// Hooks up to MQTT broker -> Saves to SQLite -> serves via API
 
 const express = require('express');
 const mqtt = require('mqtt');
 const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 
-// Configuration (with environment variable support)
-const MQTT_BROKER = process.env.MQTT_BROKER || 'mqtt://broker.emqx.io:1883';
-const MQTT_TOPIC = process.env.MQTT_TOPIC || 'intern-test/bhargav/sensor-data';
+// Env vars or defaults
+const BROKER = process.env.MQTT_BROKER || 'mqtt://broker.emqx.io:1883';
+const TOPIC = process.env.MQTT_TOPIC || 'intern-test/bhargav/sensor-data';
 const PORT = process.env.PORT || 5000;
-const DB_FILE = process.env.DB_FILE || 'database.db';
+const DB_PATH = process.env.DB_FILE || 'database.db';
 
-// Initialize Express app
+// Standard express setup
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Initialize SQLite database
-const db = new sqlite3.Database(DB_FILE, (err) => {
-    if (err) {
-        console.error('✗ Database connection error:', err.message);
-    } else {
-        console.log('✓ Connected to SQLite database');
-        initializeDatabase();
+// DB Setup
+const db = new sqlite3.Database(DB_PATH, (err) => {
+    if (err) console.error('DB Error:', err.message);
+    else {
+        console.log('✓ DB Connected');
+        initDB();
     }
 });
 
-/**
- * Create measurements table if it doesn't exist
- */
-function initializeDatabase() {
-    const createTableSQL = `
+// Make sure table exists
+function initDB() {
+    // Basic schema for sensor readings
+    const sql = `
     CREATE TABLE IF NOT EXISTS measurements (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      sensor_id TEXT NOT NULL,
-      timestamp TEXT NOT NULL,
-      temperature REAL NOT NULL,
-      humidity INTEGER NOT NULL,
-      status TEXT NOT NULL,
+      sensor_id TEXT,
+      timestamp TEXT,
+      temperature REAL,
+      humidity INTEGER,
+      status TEXT,
       received_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `;
+    )`;
 
-    db.run(createTableSQL, (err) => {
-        if (err) {
-            console.error('✗ Error creating table:', err.message);
-        } else {
-            console.log('✓ Measurements table ready');
-        }
+    db.run(sql, (err) => {
+        if (err) console.error('Table create failed:', err);
     });
 }
 
-/**
- * Insert sensor data into database
- */
-function insertMeasurement(data) {
-    const insertSQL = `
+// Helper to save readings
+function saveReading(data) {
+    const sql = `
     INSERT INTO measurements (sensor_id, timestamp, temperature, humidity, status)
     VALUES (?, ?, ?, ?, ?)
-  `;
+    `;
 
     const params = [
         data.sensor_id,
@@ -71,113 +60,67 @@ function insertMeasurement(data) {
         data.status
     ];
 
-    db.run(insertSQL, params, function (err) {
-        if (err) {
-            console.error('✗ Error inserting data:', err.message);
-        } else {
-            console.log(`✓ Data saved (ID: ${this.lastID}) - Temp: ${data.temperature}°C, Humidity: ${data.humidity}%`);
-        }
+    db.run(sql, params, function (err) {
+        if (err) console.error('Insert failed:', err.message);
+        else console.log(`✓ Saved: ${data.temperature}°C / ${data.humidity}%`);
     });
 }
 
-// Connect to MQTT broker
-console.log(`Connecting to MQTT broker: ${MQTT_BROKER}...`);
-const mqttClient = mqtt.connect(MQTT_BROKER);
+// MQTT Setup
+console.log(`Connecting to ${BROKER}...`);
+const client = mqtt.connect(BROKER);
 
-mqttClient.on('connect', () => {
-    console.log('✓ Connected to MQTT broker');
-    console.log(`✓ Subscribing to topic: ${MQTT_TOPIC}`);
+client.on('connect', () => {
+    console.log('✓ MQTT Connected');
 
-    mqttClient.subscribe(MQTT_TOPIC, (err) => {
-        if (err) {
-            console.error('✗ Subscription error:', err);
-        } else {
-            console.log('✓ Successfully subscribed to topic\n');
-        }
+    client.subscribe(TOPIC, (err) => {
+        if (!err) console.log(`✓ Listening on: ${TOPIC}\n`);
     });
 });
 
-mqttClient.on('message', (topic, message) => {
+// Handle incoming messages
+client.on('message', (topic, msg) => {
     try {
-        const data = JSON.parse(message.toString());
-        console.log('\n[New MQTT Message Received]');
-        console.log(`Topic: ${topic}`);
-        console.log(`Payload:`, data);
-
-        // Save to database
-        insertMeasurement(data);
-    } catch (error) {
-        console.error('✗ Error processing message:', error.message);
+        const payload = JSON.parse(msg.toString());
+        console.log('-> New Msg:', payload);
+        saveReading(payload);
+    } catch (e) {
+        console.error('Bad message format:', e.message);
     }
 });
 
-mqttClient.on('error', (error) => {
-    console.error('✗ MQTT Error:', error);
-});
+// API Routes
+// ------------------------------
 
-// REST API Endpoints
-
-/**
- * GET /api/metrics - Returns last 50 sensor readings
- */
+// Get latest 50 readings
 app.get('/api/metrics', (req, res) => {
-    const query = `
-    SELECT 
-      id,
-      sensor_id,
-      timestamp,
-      temperature,
-      humidity,
-      status,
-      received_at
-    FROM measurements
-    ORDER BY id DESC
-    LIMIT 50
-  `;
+    // Just grab the newest stuff first
+    const sql = `SELECT * FROM measurements ORDER BY id DESC LIMIT 50`;
 
-    db.all(query, [], (err, rows) => {
+    db.all(sql, [], (err, rows) => {
         if (err) {
-            console.error('✗ Query error:', err.message);
-            res.status(500).json({ error: 'Database query failed' });
-        } else {
-            console.log(`✓ API Request: Returning ${rows.length} measurements`);
-            res.json({
-                success: true,
-                count: rows.length,
-                data: rows
-            });
+            res.status(500).json({ error: 'DB failed' });
+            return;
         }
+        res.json({ success: true, count: rows.length, data: rows });
     });
 });
 
-/**
- * GET /health - Health check endpoint
- */
+// Basic health check
 app.get('/health', (req, res) => {
-    res.json({
-        status: 'healthy',
-        mqtt: mqttClient.connected,
-        database: 'connected'
-    });
+    res.send({ status: 'ok', mqtt: client.connected });
 });
 
-// Start server
+// Start it up
 app.listen(PORT, () => {
-    console.log(`\n${'='.repeat(50)}`);
-    console.log(`✓ Backend server running on port ${PORT}`);
-    console.log(`✓ API endpoint: http://localhost:${PORT}/api/metrics`);
-    console.log(`${'='.repeat(50)}\n`);
+    console.log(`\n=== Backpack running on port ${PORT} ===`);
+    console.log(`API: http://localhost:${PORT}/api/metrics\n`);
 });
 
-// Graceful shutdown
+// Cleanup on exit
 process.on('SIGINT', () => {
-    console.log('\nShutting down gracefully...');
-    mqttClient.end();
-    db.close((err) => {
-        if (err) {
-            console.error(err.message);
-        }
-        console.log('✓ Database connection closed');
-        process.exit(0);
-    });
+    console.log('\nClosing down...');
+    client.end();
+    db.close();
+    process.exit();
 });

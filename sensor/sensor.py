@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
-"""
-Mock IoT Sensor - Real-Time Data Publisher
-Publishes simulated sensor data to MQTT broker every 2 seconds
-"""
+# Simple mock sensor script
+# Just pushes random temp/humidity data to MQTT so we have something to visualize
 
 import paho.mqtt.client as mqtt
 import json
@@ -10,86 +8,73 @@ import random
 import time
 from datetime import datetime, timezone
 
-# MQTT Configuration
-MQTT_BROKER = "broker.emqx.io"
-MQTT_PORT = 1883
-MQTT_TOPIC = "intern-test/bhargav/sensor-data"
-SENSOR_ID = "sensor_001"
-PUBLISH_INTERVAL = 2  # seconds
+# Config stuff
+# Using public broker for testing, switch to private for prod
+BROKER = "broker.emqx.io"
+PORT = 1883
+TOPIC = "intern-test/bhargav/sensor-data"
+DEVICE_ID = "sensor_001"
 
 def on_connect(client, userdata, flags, rc):
-    """Callback for when the client connects to the broker"""
     if rc == 0:
-        print(f"✓ Connected to MQTT Broker: {MQTT_BROKER}")
-        print(f"✓ Publishing to topic: {MQTT_TOPIC}")
-        print(f"✓ Interval: {PUBLISH_INTERVAL} seconds\n")
+        print(f"✓ Connected to {BROKER}")
+        print(f"✓ Target topic: {TOPIC}")
     else:
-        print(f"✗ Connection failed with code {rc}")
+        print(f"✗ Failed to connect. Error code: {rc}")
 
 def on_publish(client, userdata, mid):
-    """Callback for when a message is published"""
-    print(f"✓ Message {mid} published successfully")
+    # Just confirming the message went out
+    print(f"✓ Msg {mid} sent")
 
-def generate_sensor_data():
-    """Generate random sensor data matching the required format"""
-    data = {
-        "sensor_id": SENSOR_ID,
+def get_reading():
+    # Make up some believable numbers
+    # active status just means it's working
+    return {
+        "sensor_id": DEVICE_ID,
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "temperature": round(random.uniform(20.0, 32.0), 2),
+        "temperature": round(random.uniform(20.0, 32.0), 2), # Random temp between 20-32C
         "humidity": random.randint(40, 80),
         "status": "active"
     }
-    return data
 
-def main():
-    """Main function to initialize MQTT client and publish data"""
-    # Create MQTT client
+def run():
     client = mqtt.Client()
     
-    # Attach callbacks
+    # Set up our callbacks
     client.on_connect = on_connect
     client.on_publish = on_publish
     
     try:
-        # Connect to broker
-        print(f"Connecting to MQTT Broker: {MQTT_BROKER}:{MQTT_PORT}...")
-        client.connect(MQTT_BROKER, MQTT_PORT, 60)
+        print(f"Connecting to {BROKER}...")
+        client.connect(BROKER, PORT, 60)
         
-        # Start network loop in background
+        # Start the background thread for network traffic
         client.loop_start()
+        time.sleep(1) # Give it a sec to connect
         
-        # Wait for connection
-        time.sleep(2)
-        
-        # Publish data continuously
-        message_count = 0
+        count = 0
         while True:
-            # Generate sensor data
-            sensor_data = generate_sensor_data()
+            data = get_reading()
+            payload = json.dumps(data)
             
-            # Convert to JSON
-            json_payload = json.dumps(sensor_data)
+            # Fire and forget
+            client.publish(TOPIC, payload)
             
-            # Publish to MQTT topic
-            result = client.publish(MQTT_TOPIC, json_payload)
+            count += 1
+            print(f"\n[#{count}] Data pushed:")
+            print(f"  Temp: {data['temperature']}°C")
+            print(f"  Hum:  {data['humidity']}%")
             
-            message_count += 1
-            print(f"\n[Message #{message_count}]")
-            print(f"Temperature: {sensor_data['temperature']}°C")
-            print(f"Humidity: {sensor_data['humidity']}%")
-            print(f"Timestamp: {sensor_data['timestamp']}")
-            
-            # Wait before next publish
-            time.sleep(PUBLISH_INTERVAL)
+            # Don't flood the broker
+            time.sleep(2)
             
     except KeyboardInterrupt:
-        print("\n\n✓ Sensor stopped by user")
+        print("\nStopping...")
     except Exception as e:
-        print(f"\n✗ Error: {e}")
+        print(f"Crashed: {e}")
     finally:
         client.loop_stop()
         client.disconnect()
-        print("✓ Disconnected from broker")
 
 if __name__ == "__main__":
-    main()
+    run()

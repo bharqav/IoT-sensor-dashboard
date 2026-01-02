@@ -8,9 +8,10 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Fetch data from backend API
+    // Grab the latest sensor data
     const fetchMetrics = async () => {
         try {
+            // Check if we're on prod or local
             const apiUrl = process.env.NEXT_PUBLIC_API_URL
                 ? `${process.env.NEXT_PUBLIC_API_URL}/api/metrics`
                 : 'http://localhost:5000/api/metrics';
@@ -25,27 +26,28 @@ export default function Dashboard() {
                 setError('Failed to fetch data');
             }
         } catch (err) {
-            setError('Cannot connect to backend. Make sure it\'s running on port 5000.');
+            // Usually happens if backend isn't up
+            setError('Is the backend server running? Check port 5000.');
             console.error('Fetch error:', err);
         } finally {
             setLoading(false);
         }
     };
 
-    // Poll API every 2 seconds
+    // Keep refreshing so it looks "real-time" (every 2s)
     useEffect(() => {
         fetchMetrics();
         const interval = setInterval(fetchMetrics, 2000);
         return () => clearInterval(interval);
     }, []);
 
-    // Get the most recent reading
+    // Easy access to the newest reading
     const latestReading = metrics.length > 0 ? metrics[0] : null;
 
+    // Helper to make timestamps readable
     const formatTimestamp = (isoString) => {
         try {
-            const date = new Date(isoString);
-            return date.toLocaleString('en-US', {
+            return new Date(isoString).toLocaleString('en-US', {
                 month: 'short',
                 day: 'numeric',
                 hour: '2-digit',
@@ -57,28 +59,29 @@ export default function Dashboard() {
         }
     };
 
-    // BONUS FEATURE 1: Temperature Alert System (>30°C)
+    // --- Bonus Feature: Temperature Alert ---
     const [showAlert, setShowAlert] = useState(false);
 
     useEffect(() => {
+        // Simple logic: if temp > 30, scream at user
         if (latestReading && latestReading.temperature > 30) {
             setShowAlert(true);
-            // Optional: Play alert sound
+
+            // Try to play a sound (might be blocked by browser but worth a shot)
             if (typeof window !== 'undefined' && window.Audio) {
                 const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLTiTYIFWa87eWeTRALT6Xk7rZkGwY4ktjxz3otBSV3yPDdkEAKFF613utqVBQLRqDf8bxsIQUrgc3y1Ig3CBJktO/mnE0PC1Co5O+0ZBwGN5LZ8NB5LAUld8nw0o9CCRRet+rsaFUUCkag4PK8bSEFK4HN8tOJNwgSZLXv5p1NEAtPque+1mMcBjiS2PHQeCwFJXfJ8NKPQgkUXrfu7GlWFApGoN/yv20hBSuBzvLTiTYIE2S17+SeThALT6vn77RlGwY4ktnx0HksBSZ3yfDSj0IJFF637uxpVhQKRqDf8r9tIQUrgc7y04k2CBNkte/knE4QC0+r5++0ZRsGOJLZ8dB5LAUmd8nw0o9CCRRet+7saVYUCkag3/K/bSEFK4HO8tOJNggTZLXv5JxOEAtPq+fvtGUbBjiS2fHQeSwFJnfJ8NKPQgkUXrfu7GlWFApGoN/yv20hBSuBzvLTiTYIE2S17+ScThALT6vn77RlGwY4ktnx0HksBSZ3yfDSj0IJFF637uxpVhQKRqDf8r9tIQUrgc7y04k2CBNkte/knE4QC0+r5++0ZRsGOJLZ8dB5LAUmd8nw0o9CCRRet+7saVYUCkag3/K/bSEFK4HO8tOJNggTZLXv5JxOEAtPq+fvtGUbBjiS2fHQeSwFJnfJ8NKPQgkUXrfu7GlWFApGoN/yv20hBSuBzvLTiTYIE2S17+ScThALT6vn77RlGwY4ktnx0HksBSZ3yfDSj0IJFF637uxpVhQKRqDf8r9tIQU=');
-                audio.play().catch(() => { }); // Ignore errors
+                audio.play().catch(() => { }); // catch ignore if user hasn't interacted yet
             }
         } else {
             setShowAlert(false);
         }
     }, [latestReading]);
 
-    // BONUS FEATURE 2: Prepare Chart Data (last 20 readings)
+    // --- Bonus Feature: Chart Config (Recharts) ---
+    // Taking the last 20 points and flipping them so chart reads left-to-right
     const chartData = metrics.slice(0, 20).reverse().map((reading) => ({
         time: new Date(reading.timestamp).toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
+            hour: '2-digit', minute: '2-digit', second: '2-digit'
         }),
         temperature: reading.temperature,
         humidity: reading.humidity,
@@ -86,7 +89,7 @@ export default function Dashboard() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-            {/* Header */}
+            {/* Top Bar */}
             <header className="bg-white shadow-sm border-b border-gray-200">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <div className="flex items-center justify-between">
@@ -99,6 +102,7 @@ export default function Dashboard() {
                             </p>
                         </div>
                         <div className="flex items-center space-x-2">
+                            {/* Blinking dot for live status */}
                             <div className={`w-3 h-3 rounded-full ${metrics.length > 0 ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
                             <span className="text-sm font-medium text-gray-600">
                                 {metrics.length > 0 ? 'Live' : 'Offline'}
@@ -108,9 +112,8 @@ export default function Dashboard() {
                 </div>
             </header>
 
-            {/* Main Content */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Error State */}
+                {/* Error Banner */}
                 {error && (
                     <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
                         <div className="flex items-center">
@@ -122,7 +125,7 @@ export default function Dashboard() {
                     </div>
                 )}
 
-                {/* BONUS FEATURE 1: Temperature Alert (>30°C) */}
+                {/* --- Alert Component --- */}
                 {showAlert && latestReading && (
                     <div className="bg-gradient-to-r from-red-500 to-orange-500 border-2 border-red-600 rounded-lg p-6 mb-6 shadow-lg animate-pulse">
                         <div className="flex items-start justify-between">
@@ -138,7 +141,7 @@ export default function Dashboard() {
                                         Current temperature: <span className="font-bold text-2xl">{latestReading.temperature}°C</span> exceeds threshold of 30°C
                                     </p>
                                     <p className="text-white text-xs mt-1 opacity-90">
-                                        Immediate action may be required to prevent equipment damage.
+                                        Action required immediately.
                                     </p>
                                 </div>
                             </div>
@@ -155,22 +158,23 @@ export default function Dashboard() {
                     </div>
                 )}
 
-                {/* Loading State */}
+                {/* Spinner */}
                 {loading && !error && (
                     <div className="flex justify-center items-center py-12">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
                     </div>
                 )}
 
-                {/* Status Cards */}
+                {/* Main Cards Grid */}
                 {!loading && latestReading && (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                        {/* Temperature Card */}
+                        {/* Temp */}
                         <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
                             <div className="flex items-center justify-between mb-2">
                                 <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
                                     Temperature
                                 </h3>
+                                {/* Simple icon */}
                                 <svg className="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                                 </svg>
@@ -183,7 +187,7 @@ export default function Dashboard() {
                             </p>
                         </div>
 
-                        {/* Humidity Card */}
+                        {/* Moisture */}
                         <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
                             <div className="flex items-center justify-between mb-2">
                                 <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
@@ -201,7 +205,7 @@ export default function Dashboard() {
                             </p>
                         </div>
 
-                        {/* Status Card */}
+                        {/* Status */}
                         <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
                             <div className="flex items-center justify-between mb-2">
                                 <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
@@ -221,7 +225,7 @@ export default function Dashboard() {
                     </div>
                 )}
 
-                {/* BONUS FEATURE 2: Line Chart Visualization */}
+                {/* --- Chart Section --- */}
                 {!loading && metrics.length > 0 && (
                     <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden mb-8">
                         <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
@@ -229,7 +233,7 @@ export default function Dashboard() {
                                 📊 Real-Time Trends
                             </h2>
                             <p className="text-sm text-gray-500 mt-1">
-                                Live visualization of temperature and humidity over time
+                                Live visualization
                             </p>
                         </div>
                         <div className="p-6">
@@ -252,9 +256,7 @@ export default function Dashboard() {
                                             boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                                         }}
                                     />
-                                    <Legend
-                                        wrapperStyle={{ paddingTop: '20px' }}
-                                    />
+                                    <Legend wrapperStyle={{ paddingTop: '20px' }} />
                                     <Line
                                         type="monotone"
                                         dataKey="temperature"
@@ -279,7 +281,7 @@ export default function Dashboard() {
                     </div>
                 )}
 
-                {/* Data Table */}
+                {/* History Table */}
                 {!loading && metrics.length > 0 && (
                     <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
                         <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
@@ -287,7 +289,7 @@ export default function Dashboard() {
                                 Recent Measurements
                             </h2>
                             <p className="text-sm text-gray-500 mt-1">
-                                Showing last {metrics.length} readings
+                                Last {metrics.length} readings
                             </p>
                         </div>
 
@@ -295,21 +297,11 @@ export default function Dashboard() {
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
                                     <tr>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Timestamp
-                                        </th>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Sensor ID
-                                        </th>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Temperature
-                                        </th>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Humidity
-                                        </th>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Status
-                                        </th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sensor ID</th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Temperature</th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Humidity</th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
@@ -346,15 +338,15 @@ export default function Dashboard() {
                     </div>
                 )}
 
-                {/* No Data State */}
+                {/* Initial Empty State */}
                 {!loading && !error && metrics.length === 0 && (
                     <div className="bg-white rounded-lg shadow-md p-12 text-center border border-gray-200">
                         <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                         </svg>
-                        <h3 className="mt-2 text-sm font-medium text-gray-900">No data available</h3>
+                        <h3 className="mt-2 text-sm font-medium text-gray-900">No data available yet</h3>
                         <p className="mt-1 text-sm text-gray-500">
-                            Waiting for sensor data... Make sure the sensor and backend are running.
+                            Waiting for the sensor to wake up...
                         </p>
                     </div>
                 )}
