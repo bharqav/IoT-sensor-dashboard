@@ -67,11 +67,7 @@ export default function Dashboard() {
         if (latestReading && latestReading.temperature > 30) {
             setShowAlert(true);
 
-            // try to play a sound
-            if (typeof window !== 'undefined' && window.Audio) {
-                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLTiTYIFWa87eWeTRALT6Xk7rZkGwY4ktjxz3otBSV3yPDdkEAKFF613utqVBQLRqDf8bxsIQUrgc3y1Ig3CBJktO/mnE0PC1Co5O+0ZBwGN5LZ8NB5LAUld8nw0o9CCRRet+rsaFUUCkag4PK8bSEFK4HN8tOJNwgSZLXv5p1NEAtPque+1mMcBjiS2PHQeCwFJXfJ8NKPQgkUXrfu7GlWFApGoN/yv20hBSuBzvLTiTYIE2S17+SeThALT6vn77RlGwY4ktnx0HksBSZ3yfDSj0IJFF637uxpVhQKRqDf8r9tIQUrgc7y04k2CBNkte/knE4QC0+r5++0ZRsGOJLZ8dB5LAUmd8nw0o9CCRRet+7saVYUCkag3/K/bSEFK4HO8tOJNggTZLXv5JxOEAtPq+fvtGUbBjiS2fHQeSwFJnfJ8NKPQgkUXrfu7GlWFApGoN/yv20hBSuBzvLTiTYIE2S17+ScThALT6vn77RlGwY4ktnx0HksBSZ3yfDSj0IJFF637uxpVhQKRqDf8r9tIQUrgc7y04k2CBNkte/knE4QC0+r5++0ZRsGOJLZ8dB5LAUmd8nw0o9CCRRet+7saVYUCkag3/K/bSEFK4HO8tOJNggTZLXv5JxOEAtPq+fvtGUbBjiS2fHQeSwFJnfJ8NKPQgkUXrfu7GlWFApGoN/yv20hBSuBzvLTiTYIE2S17+ScThALT6vn77RlGwY4ktnx0HksBSZ3yfDSj0IJFF637uxpVhQKRqDf8r9tIQU=');
-                audio.play().catch(() => { });
-            }
+
         } else {
             setShowAlert(false);
         }
