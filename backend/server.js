@@ -1,34 +1,33 @@
-// Simple Backend for IoT Dashboard
-// Hooks up to MQTT broker -> Saves to SQLite -> serves via API
+// simple backend for iot dashboard
+// hooks up mqtt -> sqlite -> api
 
 const express = require('express');
 const mqtt = require('mqtt');
 const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 
-// Env vars or defaults
+// config vars
 const BROKER = process.env.MQTT_BROKER || 'mqtt://broker.emqx.io:1883';
 const TOPIC = process.env.MQTT_TOPIC || 'intern-test/bhargav/sensor-data';
 const PORT = process.env.PORT || 5000;
 const DB_PATH = process.env.DB_FILE || 'database.db';
 
-// Standard express setup
+// express defaults
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// DB Setup
+// set up the database
 const db = new sqlite3.Database(DB_PATH, (err) => {
-    if (err) console.error('DB Error:', err.message);
+    if (err) console.error('db error:', err.message);
     else {
-        console.log('✓ DB Connected');
+        console.log('✓ db connected');
         initDB();
     }
 });
 
-// Make sure table exists
+// create table if needed
 function initDB() {
-    // Basic schema for sensor readings
     const sql = `
     CREATE TABLE IF NOT EXISTS measurements (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -41,11 +40,11 @@ function initDB() {
     )`;
 
     db.run(sql, (err) => {
-        if (err) console.error('Table create failed:', err);
+        if (err) console.error('create table failed:', err);
     });
 }
 
-// Helper to save readings
+// insert data helper
 function saveReading(data) {
     const sql = `
     INSERT INTO measurements (sensor_id, timestamp, temperature, humidity, status)
@@ -61,65 +60,64 @@ function saveReading(data) {
     ];
 
     db.run(sql, params, function (err) {
-        if (err) console.error('Insert failed:', err.message);
-        else console.log(`✓ Saved: ${data.temperature}°C / ${data.humidity}%`);
+        if (err) console.error('insert failed:', err.message);
+        else console.log(`✓ saved: ${data.temperature}°C / ${data.humidity}%`);
     });
 }
 
-// MQTT Setup
-console.log(`Connecting to ${BROKER}...`);
+// mqtt connection stuff
+console.log(`connecting to ${BROKER}...`);
 const client = mqtt.connect(BROKER);
 
 client.on('connect', () => {
-    console.log('✓ MQTT Connected');
+    console.log('✓ mqtt connected');
 
     client.subscribe(TOPIC, (err) => {
-        if (!err) console.log(`✓ Listening on: ${TOPIC}\n`);
+        if (!err) console.log(`✓ listening on: ${TOPIC}\n`);
     });
 });
 
-// Handle incoming messages
+// handling messages
 client.on('message', (topic, msg) => {
     try {
         const payload = JSON.parse(msg.toString());
-        console.log('-> New Msg:', payload);
+        console.log('-> msg received:', payload);
         saveReading(payload);
     } catch (e) {
-        console.error('Bad message format:', e.message);
+        console.error('bad payload:', e.message);
     }
 });
 
-// API Routes
+// api routes
 // ------------------------------
 
-// Get latest 50 readings
+// just get the last 50 readings
 app.get('/api/metrics', (req, res) => {
-    // Just grab the newest stuff first
     const sql = `SELECT * FROM measurements ORDER BY id DESC LIMIT 50`;
 
     db.all(sql, [], (err, rows) => {
         if (err) {
-            res.status(500).json({ error: 'DB failed' });
+            res.status(500).json({ error: 'db failed' });
             return;
         }
         res.json({ success: true, count: rows.length, data: rows });
     });
 });
 
-// Basic health check
+// health check
 app.get('/health', (req, res) => {
     res.send({ status: 'ok', mqtt: client.connected });
 });
 
-// Start it up
+// start server
 app.listen(PORT, () => {
-    console.log(`\n=== Backpack running on port ${PORT} ===`);
-    console.log(`API: http://localhost:${PORT}/api/metrics\n`);
+    console.log(`\n=== backend running on port ${PORT} ===`);
+    console.log(`api: http://localhost:${PORT}/api/metrics\n`);
 });
 
-// Cleanup on exit
+// clean exit
 process.on('SIGINT', () => {
-    console.log('\nClosing down...');
+    console.log('\nshutting down...');
     client.end();
     db.close();
     process.exit();

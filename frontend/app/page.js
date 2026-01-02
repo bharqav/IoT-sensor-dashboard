@@ -8,10 +8,10 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Grab the latest sensor data
+    // fetch data from api
     const fetchMetrics = async () => {
         try {
-            // Check if we're on prod or local
+            // localhost or prod url
             const apiUrl = process.env.NEXT_PUBLIC_API_URL
                 ? `${process.env.NEXT_PUBLIC_API_URL}/api/metrics`
                 : 'http://localhost:5000/api/metrics';
@@ -26,7 +26,7 @@ export default function Dashboard() {
                 setError('Failed to fetch data');
             }
         } catch (err) {
-            // Usually happens if backend isn't up
+            // backend probably dead if we get here
             setError('Is the backend server running? Check port 5000.');
             console.error('Fetch error:', err);
         } finally {
@@ -34,17 +34,17 @@ export default function Dashboard() {
         }
     };
 
-    // Keep refreshing so it looks "real-time" (every 2s)
+    // poll every 2s, close enough to real-time
     useEffect(() => {
         fetchMetrics();
         const interval = setInterval(fetchMetrics, 2000);
         return () => clearInterval(interval);
     }, []);
 
-    // Easy access to the newest reading
+    // latest reading
     const latestReading = metrics.length > 0 ? metrics[0] : null;
 
-    // Helper to make timestamps readable
+    // helper to make timestamps readable
     const formatTimestamp = (isoString) => {
         try {
             return new Date(isoString).toLocaleString('en-US', {
@@ -59,26 +59,26 @@ export default function Dashboard() {
         }
     };
 
-    // --- Bonus Feature: Temperature Alert ---
+    // --- bonus feature: temp alert ---
     const [showAlert, setShowAlert] = useState(false);
 
     useEffect(() => {
-        // Simple logic: if temp > 30, scream at user
+        // simple alert if temp is too high
         if (latestReading && latestReading.temperature > 30) {
             setShowAlert(true);
 
-            // Try to play a sound (might be blocked by browser but worth a shot)
+            // try to play a sound
             if (typeof window !== 'undefined' && window.Audio) {
                 const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLTiTYIFWa87eWeTRALT6Xk7rZkGwY4ktjxz3otBSV3yPDdkEAKFF613utqVBQLRqDf8bxsIQUrgc3y1Ig3CBJktO/mnE0PC1Co5O+0ZBwGN5LZ8NB5LAUld8nw0o9CCRRet+rsaFUUCkag4PK8bSEFK4HN8tOJNwgSZLXv5p1NEAtPque+1mMcBjiS2PHQeCwFJXfJ8NKPQgkUXrfu7GlWFApGoN/yv20hBSuBzvLTiTYIE2S17+SeThALT6vn77RlGwY4ktnx0HksBSZ3yfDSj0IJFF637uxpVhQKRqDf8r9tIQUrgc7y04k2CBNkte/knE4QC0+r5++0ZRsGOJLZ8dB5LAUmd8nw0o9CCRRet+7saVYUCkag3/K/bSEFK4HO8tOJNggTZLXv5JxOEAtPq+fvtGUbBjiS2fHQeSwFJnfJ8NKPQgkUXrfu7GlWFApGoN/yv20hBSuBzvLTiTYIE2S17+ScThALT6vn77RlGwY4ktnx0HksBSZ3yfDSj0IJFF637uxpVhQKRqDf8r9tIQUrgc7y04k2CBNkte/knE4QC0+r5++0ZRsGOJLZ8dB5LAUmd8nw0o9CCRRet+7saVYUCkag3/K/bSEFK4HO8tOJNggTZLXv5JxOEAtPq+fvtGUbBjiS2fHQeSwFJnfJ8NKPQgkUXrfu7GlWFApGoN/yv20hBSuBzvLTiTYIE2S17+ScThALT6vn77RlGwY4ktnx0HksBSZ3yfDSj0IJFF637uxpVhQKRqDf8r9tIQU=');
-                audio.play().catch(() => { }); // catch ignore if user hasn't interacted yet
+                audio.play().catch(() => { });
             }
         } else {
             setShowAlert(false);
         }
     }, [latestReading]);
 
-    // --- Bonus Feature: Chart Config (Recharts) ---
-    // Taking the last 20 points and flipping them so chart reads left-to-right
+    // --- bonus feature: chart config ---
+    // chart needs data in a specific format
     const chartData = metrics.slice(0, 20).reverse().map((reading) => ({
         time: new Date(reading.timestamp).toLocaleTimeString('en-US', {
             hour: '2-digit', minute: '2-digit', second: '2-digit'

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-# Simple mock sensor script
-# Just pushes random temp/humidity data to MQTT so we have something to visualize
+# mock sensor script
+# basically pushes random data to mqtt so we have something to show in the ui
 
 import paho.mqtt.client as mqtt
 import json
@@ -8,31 +8,32 @@ import random
 import time
 from datetime import datetime, timezone
 
-# Config stuff
-# Using public broker for testing, switch to private for prod
+# connection details
+# using the public emqx broker for now, easier than setting up local
 BROKER = "broker.emqx.io"
 PORT = 1883
 TOPIC = "intern-test/bhargav/sensor-data"
 DEVICE_ID = "sensor_001"
 
+# callbacks for mqtt
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
-        print(f"✓ Connected to {BROKER}")
-        print(f"✓ Target topic: {TOPIC}")
+        print(f"✓ connected to {BROKER}")
+        print(f"✓ topic: {TOPIC}")
     else:
-        print(f"✗ Failed to connect. Error code: {rc}")
+        print(f"✗ failed to connect, rc: {rc}")
 
 def on_publish(client, userdata, mid):
-    # Just confirming the message went out
-    print(f"✓ Msg {mid} sent")
+    # just confirming it actually sent
+    print(f"✓ msg {mid} sent")
 
+# generates fake sensor values
 def get_reading():
-    # Make up some believable numbers
-    # active status just means it's working
+    # just random numbers that look realistic
     return {
         "sensor_id": DEVICE_ID,
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "temperature": round(random.uniform(20.0, 32.0), 2), # Random temp between 20-32C
+        "temperature": round(random.uniform(20.0, 32.0), 2), # reasonable room temp range
         "humidity": random.randint(40, 80),
         "status": "active"
     }
@@ -40,39 +41,41 @@ def get_reading():
 def run():
     client = mqtt.Client()
     
-    # Set up our callbacks
+    # hooking up the callbacks
     client.on_connect = on_connect
     client.on_publish = on_publish
     
     try:
-        print(f"Connecting to {BROKER}...")
+        print(f"connecting to {BROKER}...")
         client.connect(BROKER, PORT, 60)
         
-        # Start the background thread for network traffic
+        # bg thread for network stuff
         client.loop_start()
-        time.sleep(1) # Give it a sec to connect
+        time.sleep(1) 
         
         count = 0
         while True:
+            # create payload and serialize
             data = get_reading()
             payload = json.dumps(data)
             
-            # Fire and forget
+            # send it off
             client.publish(TOPIC, payload)
             
             count += 1
-            print(f"\n[#{count}] Data pushed:")
-            print(f"  Temp: {data['temperature']}°C")
-            print(f"  Hum:  {data['humidity']}%")
+            print(f"\n[#{count}] pushed:")
+            print(f"  temp: {data['temperature']}°C")
+            print(f"  hum:  {data['humidity']}%")
             
-            # Don't flood the broker
+            # sleep a bit so we don't spam
             time.sleep(2)
             
     except KeyboardInterrupt:
-        print("\nStopping...")
+        print("\nstopping...")
     except Exception as e:
-        print(f"Crashed: {e}")
+        print(f"crashed: {e}")
     finally:
+        # cleanup
         client.loop_stop()
         client.disconnect()
 
