@@ -51,7 +51,7 @@ def run():
         
         # bg thread for network stuff
         client.loop_start()
-        time.sleep(1) 
+        time.sleep(1) # buffer between mqtt and script
         
         count = 0
         while True:
@@ -59,7 +59,7 @@ def run():
             data = get_reading()
             payload = json.dumps(data)
             
-            # send it off
+            # send it to the broker
             client.publish(TOPIC, payload)
             
             count += 1
