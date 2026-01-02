@@ -167,117 +167,122 @@ export default function Dashboard() {
                 )}
 
                 {/* Main Cards Grid */}
+                {/* NEW LAYOUT: Grid Container for Top Section */}
                 {!loading && latestReading && (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                        {/* Temp */}
-                        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
-                            <div className="flex items-center justify-between mb-2">
-                                <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
-                                    Temperature
-                                </h3>
-                                {/* Simple icon */}
-                                <svg className="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                </svg>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+
+                        {/* LEFT COLUMN: Status Cards (Stacked Vertically) */}
+                        <div className="lg:col-span-1 flex flex-col gap-6">
+
+                            {/* Temperature Card */}
+                            <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
+                                <div className="flex items-center justify-between mb-2">
+                                    <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                                        Temperature
+                                    </h3>
+                                    <svg className="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                    </svg>
+                                </div>
+                                <p className="text-5xl font-bold text-gray-900 mb-1">
+                                    {latestReading.temperature}°C
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                    Updated: {formatTimestamp(latestReading.timestamp)}
+                                </p>
                             </div>
-                            <p className="text-5xl font-bold text-gray-900 mb-1">
-                                {latestReading.temperature}°C
-                            </p>
-                            <p className="text-xs text-gray-500">
-                                Updated: {formatTimestamp(latestReading.timestamp)}
-                            </p>
+
+                            {/* Humidity Card */}
+                            <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
+                                <div className="flex items-center justify-between mb-2">
+                                    <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                                        Humidity
+                                    </h3>
+                                    <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                    </svg>
+                                </div>
+                                <p className="text-5xl font-bold text-gray-900 mb-1">
+                                    {latestReading.humidity}%
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                    Relative Humidity
+                                </p>
+                            </div>
+
+                            {/* Sensor Status Card */}
+                            <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
+                                <div className="flex items-center justify-between mb-2">
+                                    <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                                        Sensor Status
+                                    </h3>
+                                    <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <p className="text-3xl font-bold text-green-600 mb-1 capitalize">
+                                    {latestReading.status}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                    ID: {latestReading.sensor_id}
+                                </p>
+                            </div>
                         </div>
 
-                        {/* Moisture */}
-                        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
-                            <div className="flex items-center justify-between mb-2">
-                                <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
-                                    Humidity
-                                </h3>
-                                <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                </svg>
-                            </div>
-                            <p className="text-5xl font-bold text-gray-900 mb-1">
-                                {latestReading.humidity}%
-                            </p>
-                            <p className="text-xs text-gray-500">
-                                Relative Humidity
-                            </p>
-                        </div>
-
-                        {/* Status */}
-                        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
-                            <div className="flex items-center justify-between mb-2">
-                                <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
-                                    Sensor Status
-                                </h3>
-                                <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                            <p className="text-3xl font-bold text-green-600 mb-1 capitalize">
-                                {latestReading.status}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                                ID: {latestReading.sensor_id}
-                            </p>
-                        </div>
-                    </div>
-                )}
-
-                {/* --- Chart Section --- */}
-                {!loading && metrics.length > 0 && (
-                    <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden mb-8">
-                        <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                            <h2 className="text-lg font-semibold text-gray-900">
-                                📊 Real-Time Trends
-                            </h2>
-                            <p className="text-sm text-gray-500 mt-1">
-                                Live visualization
-                            </p>
-                        </div>
-                        <div className="p-6">
-                            <ResponsiveContainer width="100%" height={350}>
-                                <LineChart data={chartData}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                    <XAxis
-                                        dataKey="time"
-                                        tick={{ fill: '#6b7280', fontSize: 12 }}
-                                        angle={-45}
-                                        textAnchor="end"
-                                        height={80}
-                                    />
-                                    <YAxis tick={{ fill: '#6b7280', fontSize: 12 }} />
-                                    <Tooltip
-                                        contentStyle={{
-                                            backgroundColor: '#fff',
-                                            border: '1px solid #e5e7eb',
-                                            borderRadius: '8px',
-                                            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-                                        }}
-                                    />
-                                    <Legend wrapperStyle={{ paddingTop: '20px' }} />
-                                    <Line
-                                        type="monotone"
-                                        dataKey="temperature"
-                                        stroke="#f97316"
-                                        strokeWidth={3}
-                                        name="Temperature (°C)"
-                                        dot={{ fill: '#f97316', r: 4 }}
-                                        activeDot={{ r: 6 }}
-                                    />
-                                    <Line
-                                        type="monotone"
-                                        dataKey="humidity"
-                                        stroke="#3b82f6"
-                                        strokeWidth={3}
-                                        name="Humidity (%)"
-                                        dot={{ fill: '#3b82f6', r: 4 }}
-                                        activeDot={{ r: 6 }}
-                                    />
-                                </LineChart>
-                            </ResponsiveContainer>
+                        {/* RIGHT COLUMN: Chart (Takes up 2x space) */}
+                        <div className="lg:col-span-2 h-full">
+                            {metrics.length > 0 && (
+                                <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden h-full flex flex-col">
+                                    <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                                        <h2 className="text-lg font-semibold text-gray-900">
+                                            📊 Real-Time Trends
+                                        </h2>
+                                    </div>
+                                    <div className="p-6 flex-grow">
+                                        <ResponsiveContainer width="100%" height="100%" minHeight={300}>
+                                            <LineChart data={chartData}>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                                <XAxis
+                                                    dataKey="time"
+                                                    tick={{ fill: '#6b7280', fontSize: 10 }}
+                                                    interval={0}
+                                                    angle={-45}
+                                                    textAnchor="end"
+                                                    height={60}
+                                                />
+                                                <YAxis tick={{ fill: '#6b7280', fontSize: 12 }} />
+                                                <Tooltip
+                                                    contentStyle={{
+                                                        backgroundColor: '#fff',
+                                                        border: '1px solid #e5e7eb',
+                                                        borderRadius: '8px',
+                                                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                                                    }}
+                                                />
+                                                <Legend wrapperStyle={{ paddingTop: '10px' }} />
+                                                <Line
+                                                    type="monotone"
+                                                    dataKey="temperature"
+                                                    stroke="#f97316"
+                                                    strokeWidth={3}
+                                                    name="Temperature (°C)"
+                                                    dot={{ fill: '#f97316', r: 4 }}
+                                                    activeDot={{ r: 6 }}
+                                                />
+                                                <Line
+                                                    type="monotone"
+                                                    dataKey="humidity"
+                                                    stroke="#3b82f6"
+                                                    strokeWidth={3}
+                                                    name="Humidity (%)"
+                                                    dot={{ fill: '#3b82f6', r: 4 }}
+                                                    activeDot={{ r: 6 }}
+                                                />
+                                            </LineChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
