@@ -9,6 +9,24 @@ This application demonstrates a real-time data pipeline that:
 2. **Processes and stores** incoming sensor data in a database
 3. **Visualizes** the data in a modern, responsive web dashboard
 
+## 📸 Screenshots
+
+### Dashboard Overview
+![Dashboard Overview](./images/dashboard-overview.png)
+
+### Real-Time Trends Chart
+![Real-Time Trends](./images/dashboard-chart.png)
+
+### Recent Measurements Log
+![Measurement History](./images/dashboard-history.png)
+
+## 🎥 Demo Video
+
+[![Project Demo](https://img.youtube.com/vi/PLACEHOLDER_VIDEO_ID/0.jpg)](https://www.youtube.com/watch?v=PLACEHOLDER_VIDEO_ID)
+
+> *Video demonstration coming soon...*
+
+
 ## 🏗️ Architecture
 
 - **Sensor Layer**: Python script (`sensor.py`) acting as an edge device, simulating real-world environmental readings and publishing them via MQTT.
