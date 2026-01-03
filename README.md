@@ -11,260 +11,92 @@ This application demonstrates a real-time data pipeline that:
 
 ## 🏗️ Architecture
 
-```
-┌─────────────────┐         MQTT         ┌─────────────────┐
-│  Python Sensor  │ ───────────────────> │  Node.js Backend │
-│   (Publisher)   │  broker.emqx.io      │   (Subscriber)   │
-└─────────────────┘                       └────────┬────────┘
-                                                   │
-                                                   │ SQLite
-                                                   ▼
-                                          ┌─────────────────┐
-                                          │   Database      │
-                                          │  (database.db)  │
-                                          └────────┬────────┘
-                                                   │
-                                              REST API
-                                                   │
-                                          ┌────────▼────────┐
-                                          │  Next.js Frontend│
-                                          │   (Dashboard)    │
-                                          └──────────────────┘
-```
+- **Sensor Layer**: Python script (`sensor.py`) acting as an edge device, simulating real-world environmental readings and publishing them via MQTT.
+- **Message Broker**: Uses the public `broker.emqx.io` for lightweight, real-time message routing.
+- **Backend Service**: A Node.js & Express server that:
+    - Subscribes to the MQTT topic (`intern-test/bhargav/sensor-data`).
+    - Persists incoming data to a local SQLite database (`measurements` table).
+    - Exposes a REST API (`/api/metrics`) for the frontend.
+- **Frontend Dashboard**: A Next.js application using:
+    - **Recharts** for real-time data visualization.
+    - **Tailwind CSS** for responsive, modern UI.
+    - **Client-Side Polling** to fetch the latest metrics every 2 seconds.
 
-## 📁 Project Structure
+## 🚀 Tech Stack
 
-```
-project-root/
-├── sensor/
-│   ├── sensor.py           # Python MQTT publisher
-│   └── requirements.txt    # Python dependencies
-├── backend/
-│   ├── server.js          # Node.js Express server
-│   ├── package.json       # Node dependencies
-│   └── Dockerfile         # Backend containerization
-├── frontend/
-│   ├── app/
-│   │   ├── page.js        # Main dashboard component
-│   │   ├── layout.js      # Root layout
-│   │   └── globals.css    # Global styles
-│   ├── package.json       # Frontend dependencies
-│   ├── next.config.js     # Next.js configuration
-│   ├── tailwind.config.js # Tailwind CSS config
-│   ├── postcss.config.js  # PostCSS config
-│   └── Dockerfile         # Frontend containerization
-└── README.md
-```
+- **Frontend**: Next.js 13+ (App Router), React, Tailwind CSS, Lucide React (Icons), Recharts
+- **Backend**: Node.js, Express.js, SQLite3, MQTT.js
+- **IoT Device**: Python 3, Paho MQTT Client
+- **Infrastructure**: Docker connected via network bridging (optional)
 
-## 🚀 Quick Start
+## ⚡ Getting Started
 
 ### Prerequisites
 
-- **Python 3.7+** (for sensor)
-- **Node.js 18+** (for backend and frontend)
-- **npm** or **yarn**
-- **Docker** (optional, for containerized deployment)
+- **Node.js**: v18 or higher
+- **Python**: v3.8 or higher
+- **Docker**: (Optional) For containerized deployment
 
-### Option 1: Local Development
+### 📦 Installation & Running Locally
 
-#### 1️⃣ Start the Mock Sensor
-
-```bash
-cd sensor
-pip install -r requirements.txt
-python sensor.py
-```
-
-The sensor will connect to `broker.emqx.io` and publish data every 2 seconds.
-
-#### 2️⃣ Start the Backend Server
-
+#### 1. Backend (API & Database)
 ```bash
 cd backend
 npm install
-npm start
+node server.js
 ```
+*The server will start on port **5000** and automatically initialize `database.db`.*
 
-Backend will run on **http://localhost:5000** and:
-- Subscribe to MQTT topic: `intern-test/candidate-001/sensor-data`
-- Store data in `database.db`
-- Expose API endpoint: `GET /api/metrics`
-
-#### 3️⃣ Start the Frontend Dashboard
-
+#### 2. Frontend (Dashboard)
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+*The dashboard will be available at [http://localhost:3000](http://localhost:3000).*
 
-Frontend will run on **http://localhost:3000**
-
-### Option 2: Docker Deployment
-
-#### Backend
-
+#### 3. Start the Sensor
+Open a new terminal to run the mock sensor:
 ```bash
-cd backend
-docker build -t iot-backend .
-docker run -p 5000:5000 iot-backend
+cd sensor
+pip install paho-mqtt
+python sensor.py
+```
+*You should see logs indicating data is being pushed every few seconds.*
+
+## 🐳 Running with Docker
+
+This project includes Dockerfiles for each service.
+
+1. **Build the images**:
+   ```bash
+   docker build -t iot-backend ./backend
+   docker build -t iot-frontend ./frontend
+   ```
+
+2. **Run the containers**:
+   ```bash
+   docker run -d -p 5000:5000 --name backend iot-backend
+   docker run -d -p 3000:3000 --link backend --name frontend iot-frontend
+   ```
+
+## 📂 Project Structure
+
+```text
+├── backend/
+│   ├── Dockerfile
+│   ├── server.js        # Main Express server & MQTT handler
+│   └── database.db      # SQLite database (auto-generated)
+├── frontend/
+│   ├── app/             # Next.js App Router pages
+│   ├── public/          # Static assets
+│   └── Dockerfile
+└── sensor/
+    ├── sensor.py        # Python MQTT publisher
+    └── Dockerfile
 ```
 
-#### Frontend
+## ⚙️ Configuration
 
-```bash
-cd frontend
-docker build -t iot-frontend .
-docker run -p 3000:3000 iot-frontend
-```
-
-> **Note:** The sensor doesn't have a Dockerfile as it's designed to run locally for testing.
-
-## 🔧 Configuration
-
-### MQTT Settings
-
-- **Broker:** `broker.emqx.io`
-- **Port:** `1883`
-- **Topic:** `intern-test/candidate-001/sensor-data`
-
-### Data Format
-
-```json
-{
-  "sensor_id": "sensor_001",
-  "timestamp": "2026-01-01T15:45:30.123456+00:00",
-  "temperature": 24.5,
-  "humidity": 65,
-  "status": "active"
-}
-```
-
-### API Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/metrics` | GET | Returns last 50 sensor readings |
-| `/health` | GET | Health check endpoint |
-
-## 🎨 Features
-
-### Python Sensor (`sensor.py`)
-- ✅ Connects to public MQTT broker
-- ✅ Publishes JSON data every 2 seconds
-- ✅ Random temperature (20.0 - 30.0°C) and humidity (40-80%)
-- ✅ ISO 8601 UTC timestamps
-- ✅ Graceful shutdown handling
-
-### Node.js Backend (`server.js`)
-- ✅ MQTT subscriber with auto-reconnect
-- ✅ SQLite database persistence
-- ✅ RESTful API with CORS support
-- ✅ Automatic table creation
-- ✅ Error handling and logging
-- ✅ Runs on port 5000
-
-### Next.js Frontend (`app/page.js`)
-- ✅ Real-time data polling (2-second intervals)
-- ✅ Modern, responsive UI with Tailwind CSS
-- ✅ Status cards with latest readings
-- ✅ Sortable data table with history
-- ✅ Live status indicator
-- ✅ Error and loading states
-- ✅ Gradient background with clean design
-
-## 📊 Dashboard Features
-
-The frontend dashboard includes:
-
-1. **Live Status Indicator** - Shows connection status with animated pulse
-2. **Temperature Card** - Large display of current temperature
-3. **Humidity Card** - Current humidity percentage
-4. **Sensor Status Card** - Shows sensor ID and active status
-5. **Data Table** - Historical readings with:
-   - Timestamp
-   - Sensor ID
-   - Temperature
-   - Humidity
-   - Status badge
-
-## 🐛 Troubleshooting
-
-### Sensor not connecting to MQTT
-
-```bash
-# Check internet connectivity
-ping broker.emqx.io
-
-# Ensure no firewall blocking port 1883
-```
-
-### Backend not receiving data
-
-1. Verify sensor is publishing: Check sensor console output
-2. Check MQTT topic matches: `intern-test/candidate-001/sensor-data`
-3. Restart backend server
-
-### Frontend showing "Cannot connect to backend"
-
-1. Ensure backend is running on port 5000
-2. Check CORS is enabled in backend
-3. Verify API endpoint: http://localhost:5000/api/metrics
-
-### Docker build fails
-
-```bash
-# Clear Docker cache
-docker system prune -a
-
-# Rebuild with no cache
-docker build --no-cache -t image-name .
-```
-
-## 📝 Development Notes
-
-- The sensor uses `paho-mqtt` Python library
-- Backend uses `mqtt.js`, `express`, `sqlite3`, and `cors`
-- Frontend is built with Next.js 14 (App Router) and Tailwind CSS
-- Database file (`database.db`) is created automatically
-- All timestamps are in ISO 8601 UTC format
-
-## 🔒 Security Considerations
-
-> ⚠️ **Important:** This is a demonstration project using a public MQTT broker.
-
-For production use:
-- Use authenticated MQTT broker
-- Implement API authentication (JWT, API keys)
-- Use HTTPS for frontend and API
-- Validate and sanitize all inputs
-- Use environment variables for configuration
-- Implement rate limiting
-- Add data encryption
-
-## 📈 Bonus Features (Optional Enhancements)
-
-- [ ] Add alert if temperature exceeds 30°C
-- [ ] Implement real-time WebSocket updates (instead of polling)
-- [ ] Add charts/graphs for data visualization
-- [ ] Support multiple sensors
-- [ ] Add data export functionality (CSV, JSON)
-- [ ] Implement data retention policies
-- [ ] Add authentication and authorization
-
-## 📄 License
-
-This project is created for demonstration purposes.
-
-## 👨‍💻 Author
-
-Created as a Full Stack Engineering assignment demonstrating:
-- Real-time data handling with MQTT
-- Backend API development with Node.js
-- Modern frontend development with Next.js
-- Docker containerization
-- Database operations with SQLite
-
----
-
-**Enjoy building with IoT data! 🚀**
+- **MQTT Topic**: Currently set to `intern-test/bhargav/sensor-data`. To change this, update both `sensor/sensor.py` and `backend/server.js`.
+- **API URL**: The frontend defaults to `localhost:5000`. For production, set the `NEXT_PUBLIC_API_URL` environment variable.
