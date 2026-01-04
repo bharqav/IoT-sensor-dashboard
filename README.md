@@ -59,7 +59,7 @@ https://github.com/user-attachments/assets/cc454154-d21d-4446-95e8-2b2f35da81a5
 - **Python**: v3.8 or higher
 - **Docker**: For containerized deployment
 
-### 📦 Installation & Running Locally
+###  Installation & Running Locally
 
 #### 1. Backend (API & Database)
 ```bash
