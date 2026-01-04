@@ -2,16 +2,16 @@
 
 A complete full-stack application for real-time IoT sensor data streaming and visualization using MQTT, Node.js, and Next.js.
 
-## 📋 Project Overview
+##  Project Overview
 
 This application demonstrates a real-time data pipeline that:
 1. **Simulates IoT sensors** publishing environmental data (temperature, humidity)
 2. **Processes and stores** incoming sensor data in a database
 3. **Visualizes** the data in a modern, responsive web dashboard
 
-### 🔴 Live Demo: [View Deployed App](https://iot-sensor-dashboard-psi.vercel.app/)
+###  Live Demo: [View Deployed App](https://iot-sensor-dashboard-psi.vercel.app/)
 
-## 📸 Screenshots
+##  Screenshots
 
 ### Dashboard Overview
 ![Dashboard Overview](./images/dashboard-overview.png)
@@ -22,7 +22,7 @@ This application demonstrates a real-time data pipeline that:
 ### Recent Measurements Log
 ![Measurement History](./images/dashboard-history.png)
 
-## 🎥 Demo Video
+##  Demo Video
 
 
 
@@ -31,7 +31,7 @@ https://github.com/user-attachments/assets/cc454154-d21d-4446-95e8-2b2f35da81a5
 
 
 
-## 🏗️ Architecture
+##  Architecture
 
 - **Sensor Layer**: Python script (`sensor.py`) acting as an edge device, simulating real-world environmental readings and publishing them via MQTT.
 - **Message Broker**: Uses the public `broker.emqx.io` for lightweight, real-time message routing.
@@ -44,20 +44,20 @@ https://github.com/user-attachments/assets/cc454154-d21d-4446-95e8-2b2f35da81a5
     - **Tailwind CSS** for responsive, modern UI.
     - **Client-Side Polling** to fetch the latest metrics every 2 seconds.
 
-## 🚀 Tech Stack
+##  Tech Stack
 
-- **Frontend**: Next.js 13+ (App Router), React, Tailwind CSS, Lucide React (Icons), Recharts
+- **Frontend**: Next.js, React, Tailwind CSS, Lucide React (Icons), Recharts
 - **Backend**: Node.js, Express.js, SQLite3, MQTT.js
 - **IoT Device**: Python 3, Paho MQTT Client
-- **Infrastructure**: Docker connected via network bridging (optional)
+- **Infrastructure**: Docker 
 
-## ⚡ Getting Started
+##  Getting Started
 
 ### Prerequisites
 
 - **Node.js**: v18 or higher
 - **Python**: v3.8 or higher
-- **Docker**: (Optional) For containerized deployment
+- **Docker**: For containerized deployment
 
 ### 📦 Installation & Running Locally
 
@@ -86,7 +86,7 @@ python sensor.py
 ```
 *You should see logs indicating data is being pushed every few seconds.*
 
-## 🐳 Running with Docker
+##  Running with Docker
 
 This project includes Dockerfiles for each service.
 
@@ -102,7 +102,7 @@ This project includes Dockerfiles for each service.
    docker run -d -p 3000:3000 --link backend --name frontend iot-frontend
    ```
 
-## 📂 Project Structure
+##  Project Structure
 
 ```text
 ├── backend/
@@ -118,7 +118,7 @@ This project includes Dockerfiles for each service.
     └── Dockerfile
 ```
 
-## ⚙️ Configuration
+##  Configuration
 
 - **MQTT Topic**: Currently set to `intern-test/bhargav/sensor-data`. To change this, update both `sensor/sensor.py` and `backend/server.js`.
-- **API URL**: The frontend defaults to `localhost:5000`. For production, set the `NEXT_PUBLIC_API_URL` environment variable.
+- **API URL**: The frontend defaults to `localhost:5000`.
