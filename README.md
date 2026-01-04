@@ -9,6 +9,8 @@ This application demonstrates a real-time data pipeline that:
 2. **Processes and stores** incoming sensor data in a database
 3. **Visualizes** the data in a modern, responsive web dashboard
 
+### 🔴 Live Demo: [View Deployed App](https://iot-sensor-dashboard-psi.vercel.app/)
+
 ## 📸 Screenshots
 
 ### Dashboard Overview
