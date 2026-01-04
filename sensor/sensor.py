@@ -8,6 +8,26 @@ import random
 import time
 from datetime import datetime, timezone
 
+
+import os
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
+
+# Fake server to satisfy Render's port requirement
+def start_fake_server():
+    port = int(os.environ.get("PORT", 10000))
+    # minimal handler to return 200 OK
+    class HealthHandler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b"OK")
+            
+    server = HTTPServer(('0.0.0.0', port), HealthHandler)
+    server.serve_forever()
+
+threading.Thread(target=start_fake_server, daemon=True).start()
+
 # connection details
 # using the public emqx broker for now, easier than setting up local
 BROKER = "broker.emqx.io"
