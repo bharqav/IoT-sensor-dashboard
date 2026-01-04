@@ -24,9 +24,11 @@ This application demonstrates a real-time data pipeline that:
 
 ## 🎥 Demo Video
 
-[![Project Demo](https://img.youtube.com/vi/PLACEHOLDER_VIDEO_ID/0.jpg)](https://www.youtube.com/watch?v=PLACEHOLDER_VIDEO_ID)
 
-> *Video demonstration coming soon...*
+
+https://github.com/user-attachments/assets/cc454154-d21d-4446-95e8-2b2f35da81a5
+
+
 
 
 ## 🏗️ Architecture
